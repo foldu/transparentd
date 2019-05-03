@@ -1,0 +1,22 @@
+[package]
+name = "transparentd"
+version = "0.1.0"
+authors = ["foldu <foldu@protonmail.com>"]
+edition = "2018"
+
+[dependencies]
+structopt = "0.2.15"
+cfgen = { git = "https://github.com/foldu/cfgen", features = ["with-toml"], rev = "d730b5dc14d289b855615d382c04a06766337795" }
+serde = "1.0.89"
+serde_derive = "1.0.89"
+toml = "0.4.10"
+crossbeam-channel = "0.3.8"
+i3ipc = { version = "0.10.1", features = ["i3-4-14"] }
+directories = "1.0.2"
+log = "0.4.6"
+env_logger = "0.6.1"
+lazy_static = "1.3.0"
+inotify = "0.7.0"
+fs2 = "0.4.3"
+snafu = "0.2.3"
+serde_cbor = "0.9.0"
