@@ -93,6 +93,7 @@ fn set_windows_opacity_to<I>(
 where
     I: IntoIterator<Item = i64>,
 {
+    // TODO: should be able to calculate cmd length
     let mut cmd = String::new();
     for id in windows {
         write!(cmd, "[con_id={}] opacity {};", id, opacity).unwrap();
@@ -307,9 +308,9 @@ fn spawn_listener_thread() -> Result<chan::Receiver<I3Event>, Error> {
 
     // FIXME: unjoined thread
     thread::spawn(move || {
-        for event in listener.listen().filter_map(|ev| ev.ok()) {
+        for event in listener.listen() {
             match event {
-                Event::WindowEvent(WindowEventInfo { change, container }) => match change {
+                Ok(Event::WindowEvent(WindowEventInfo { change, container })) => match change {
                     WindowChange::Close => {
                         tx.send(I3Event::CloseWindow(container.id)).unwrap();
                     }
@@ -318,10 +319,19 @@ fn spawn_listener_thread() -> Result<chan::Receiver<I3Event>, Error> {
                     }
                     _ => {}
                 },
-                Event::ShutdownEvent(_) => {
+                Ok(Event::ShutdownEvent(_)) => {
                     tx.send(I3Event::Shutdown).unwrap();
                 }
-                _ => {}
+                Ok(_) => {}
+                // server hung up
+                Err(i3ipc::MessageError::Receive(ref e))
+                    if e.kind() == std::io::ErrorKind::ConnectionReset =>
+                {
+                    tx.send(I3Event::Shutdown).unwrap();
+                }
+                Err(e) => {
+                    log::warn!("i3listener: {}", e);
+                }
             }
         }
     });
